@@ -38,3 +38,19 @@ def train_valid_target_eval_names(args):
             eval_name_dict['target'].append(t)
         t += 1
     return eval_name_dict
+
+def print_args(args, print_list):
+    s = '==========================================\n'
+    l = len(print_list)
+    for arg, content in args.__dict__.items():
+        if l == 0 or arg in print_list:
+            s += '{}:{}\n'.format(arg, content)
+    return s
+
+
+def save_checkpoint(filename, model, args):
+    save_dict = {
+        'args': vars(args), 
+        'model_dict': model.cpu().state_dict()
+    }
+    torch.save(save_dict, os.path.join(args.output, filename))

@@ -1,10 +1,14 @@
 
 
 import argparse
-from utils.util import set_random_seed, alg_loss_dict, train_valid_target_eval_names
+import time
+import numpy as np 
+import os
+from utils.util import set_random_seed, alg_loss_dict, train_valid_target_eval_names, print_args, save_checkpoint
 from datautil.getdataloader import get_img_dataloader
 from JDM.JDM import JDM
 from JDM.opt import *
+from JDM import accu
 
 
 def get_args():
@@ -32,6 +36,9 @@ def get_args():
     parser.add_argument('--max_epoch', type=int, default=100, help='for iterations')
     parser.add_argument('--steps_per_epoch', type=int, default=100, help='for minbatch in each epoch')
     parser.add_argument('--lr_gamma', type=float, default=3e-4, help= 'for optimizer')
+    parser.add_argument('--checkpoint_frep', type=int, default=1, help='checkpoint every N epoch')
+    parser.add_argument('--save_model_every_checkpoint', action='store_true')
+    parser.add_argument('--output', type=str, default='train_output', help='output path')
 
 if __name__ == 'main':
     args = get_args()
@@ -45,4 +52,53 @@ if __name__ == 'main':
     opt = optimizer(model, args)
     sch = scheduler(opt, args)
 
+    s = print_args(args, [])
+    print('=================heper-parameter used========')
+    print(s)
+    acc_record = {}
+    acc_type_list = ['train', 'valid', 'target']
+    train_minibatches_iterator = zip(*train_loader) # zip(*) get a source_domian_num*batch size for a minibatch, constituted by a batch from each source domain
+    best_valid_acc, target_acc = 0, 0
+    print('====================start training==============')
+    start_time = time.time()
+    for epoch in range(args.max_epoch):
+        for iter_num in range(args.steps_per_epoch):
+            minibatches = [(data) for data in next(train_minibatches_iterator)] #TODO: if the minibatches would be None in the last iter_num?
+            step_vals = model.update(minibatches, opt, sch)
+
+        for (epoch in [int(args.max_epoch*0.7), int(args.max_epoch*0.9)]) and (not args.schuse):
+            print('manually decrease lr')
+            for params in opt.param_groups:
+                params['lr'] = params['lr'] * 0.1
+
+        if (epoch == (args.max_epoch - 1)) or (epoch % args.checkpoint_frep == 0):
+            print('=================epoch %d=============='%(epoch))
+            s = ''
+            for item in loss_list:
+                s += (item + '_loss:%.4f, '%(step_vals[item]))
+            print(s[:-1])
+            s = ''
+            for item in acc_type_list:
+                acc_record[item] = np.mean(np.array(
+                    accu.accuracy(model, eval_loader[i]) for i in eval_name_dict[item]
+                ))
+                s += (item + '_acc:%.4f' % acc_record[item])
+            print(s[:-1])
+            if acc_record['valid'] > best_valid_acc:
+                best_valid_acc = acc_record['valid']
+                target_acc = acc_record['target']
+            if args.save_model_every_checkpoint:
+                save_checkpoint(f'model_epoch{epoch}.pkl', model, args)
+            print('total cost time: %.4f'%(time.time() - start_time))
+            model_dict = model.state_dict()
+
+    save_checkpoint('model.pkl', model, args)
+
+    print('valid acc: %.4f' % best_valid_acc)
+    print('DG result: %.4f' % target_acc)
     
+    with open(os.path.join(args.output, 'done.txt'), 'w') as f:
+        f.write('done\n')
+        f.write('total cost time: %s\n'%(str(time.time() - start_time)))
+        f.write('valid acc: %.4f'% best_valid_acc)
+        f.write('target acc: %.4f'%target_acc)
