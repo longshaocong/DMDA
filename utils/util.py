@@ -54,3 +54,34 @@ def save_checkpoint(filename, model, args):
         'model_dict': model.cpu().state_dict()
     }
     torch.save(save_dict, os.path.join(args.output, filename))
+
+
+class Tee:
+    def __init__(self, fname,mode='a'):
+        self.stdout = sys.stdout
+        self.file = open(fname, mode)
+
+    def write(self, message):
+        self.stdout.write(message)
+        self.file.write(message)
+        self.flush()
+
+    def flush():
+        self.stdout.flush()
+        self.file.flush()
+
+
+def img_param_init(args):
+    dataset = args.dataset
+    if dataset == 'PACS':
+        domains = ['art_painting', 'cartoon', 'photo', 'sketch']
+    else:
+        print('No such dataset exists!')
+    args.domains = domains
+    args.img_dataset = {
+        'PACS': ['art_painting', 'cartoon', 'photo', 'sketch']
+    }
+    args.input_shape = (3, 224, 224)
+    if args.dataset == 'PACS':
+        args.num_classes = 7
+    return args

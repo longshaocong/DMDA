@@ -4,7 +4,9 @@ import argparse
 import time
 import numpy as np 
 import os
-from utils.util import set_random_seed, alg_loss_dict, train_valid_target_eval_names, print_args, save_checkpoint
+import sys
+
+from utils.util import set_random_seed, alg_loss_dict, train_valid_target_eval_names, print_args, save_checkpoint, Tee, img_param_init
 from datautil.getdataloader import get_img_dataloader
 from JDM.JDM import JDM
 from JDM.opt import *
@@ -17,6 +19,7 @@ def get_args():
     parser.add_argument('--num_classes', type= int, default=7)
     parser.add_argument('--dis_hidden', type= int, default= 256)
     parser.add_argument('--test_envs', type=list, default=[0])
+    parser.add_argument('--data_file', type=str, default='', help='root_dir')
     parser.add_argument('--dataset', type=str, default= 'PACS')
     parser.add_argument('--data_dir', type=str, default='')
     parser.add_argument('--split_style', type=str, default='strat')
@@ -34,11 +37,20 @@ def get_args():
     parser.add_argument('--weight_decay', type=float, default=5e-4)
     parser.add_argument('--momentum', type=float, default=0.9, help='for optimizer')
     parser.add_argument('--max_epoch', type=int, default=100, help='for iterations')
-    parser.add_argument('--steps_per_epoch', type=int, default=100, help='for minbatch in each epoch')
+    parser.add_argument('--steps_per_epoch', type=int, default=100, help='for the numbers of minbatch in each epoch')
     parser.add_argument('--lr_gamma', type=float, default=3e-4, help= 'for optimizer')
     parser.add_argument('--checkpoint_frep', type=int, default=1, help='checkpoint every N epoch')
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
     parser.add_argument('--output', type=str, default='train_output', help='output path')
+    parser.add_argument('--temperature', type=int, default=0.07, help='the temperature for the predicted logits')
+    parser.
+    args = parser.parse_args()
+    args.data_dir = args.data_file + args.data_dir
+    os.makedirs(args.output, exist_ok=True)
+    sys.stdout = Tee(os.path.join(args.output, 'out.txt'))
+    sys.stderr = Tee(os.path.join(args.output, 'err.txt'))
+    args = img_param_init(args)
+    return args
 
 if __name__ == 'main':
     args = get_args()
@@ -66,7 +78,7 @@ if __name__ == 'main':
             minibatches = [(data) for data in next(train_minibatches_iterator)] #TODO: if the minibatches would be None in the last iter_num?
             step_vals = model.update(minibatches, opt, sch)
 
-        for (epoch in [int(args.max_epoch*0.7), int(args.max_epoch*0.9)]) and (not args.schuse):
+        for (epoch in [int(args.max_epoch*0.7), int(args.max_epoch*0.9)]) and (not args.schuse): #TODO: change the strategy
             print('manually decrease lr')
             for params in opt.param_groups:
                 params['lr'] = params['lr'] * 0.1
