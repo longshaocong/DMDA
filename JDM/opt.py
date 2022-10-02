@@ -5,14 +5,14 @@ import torch
 
 def get_params(model, args):
     if args.schuse:
-        if args.schusech = 'cos':
+        if args.schusech == 'cos':
             initlr = args.lr
         else:
             initlr = 1.
     else:
         initlr = args.lr
     params = [
-        {'params': model.featurizer.parameters(), 'lr': agrs.lr_decay1 * initlr}, 
+        {'params': model.featurizer.parameters(), 'lr': args.lr_decay1 * initlr}, 
         {'params': model.classifier.parameters(), 'lr': args.lr_decay2 * initlr}, 
         {'params': model.discriminator.parameters(), 'lr': args.lr_decay2 * initlr}, 
         {'params': model.embedding.parameters(), 'lr': args.lr_decay2 * initlr}

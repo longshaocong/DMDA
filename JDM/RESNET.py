@@ -4,14 +4,14 @@ the script to implement the bottle network, e.g., resnet
 
 import torch 
 import torch.nn as nn
-from torch.vision import models
+from torchvision import models
 
 res_dict = {'resnet18': models.resnet18, 'resnet50': models.resnet50}
 
 class RES(nn.Module):
     
-    def __init__(self, res_name) -> None:
-        super(RES).__init__()
+    def __init__(self, res_name):
+        super(RES, self).__init__()
         model = res_dict[res_name](pretrained=True)
         self.conv1 = model.conv1
         self.bn1 = model.bn1

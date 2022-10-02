@@ -8,11 +8,10 @@ from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader
 
 class ImageDataset(object):
-    def __init__(self, dataset, task, root_dir, domain_name, domain_label= -1, labels= None, transform=None, 
+    def __init__(self, dataset, root_dir, domain_name, domain_label= -1, labels= None, transform=None, 
                     target_transform= None, indices= None, test_envs= [], mode= 'Default') -> None:
         self.imgs = ImageFolder(root_dir + domain_name).imgs
         self.domain_num = 0
-        self.task = task
         self.dataset = dataset
         imgs = [item[0] for item in self.imgs]
         labels = [item[1] for item in self.imgs]
@@ -21,7 +20,7 @@ class ImageDataset(object):
         self.transform = transform
         self.target_transform = target_transform
         if indices is None:
-            self.indices = np.arrage(len(imgs))
+            self.indices = np.arange(len(imgs))
         else:
             self.indices = indices
         if mode == 'Default':

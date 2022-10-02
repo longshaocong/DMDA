@@ -9,10 +9,10 @@ from JDM.RESNET import get_fea
 from JDM.common_network import feat_classifier, class_embedding
 from JDM import adver_network
 
-class JDM():
+class JDM(nn.Module):
     
     def __init__(self,args):
-        super(JDM, self).__init__(args)
+        super(JDM, self).__init__()
 
         self.featurizer = get_fea(args)
         self.classifier = feat_classifier(args.num_classes, self.featurizer.in_features)
@@ -51,7 +51,7 @@ class JDM():
         opt.step()
         if sch:
             sch.step()
-        return {'total': loss.item(), 'class': classifier_loss.item(), 'disc': disc_loss.item()}
+        return {'total': loss.item(), 'class': classifier_loss.item(), 'dis': disc_loss.item()}
     
     def predict(self, x):
-        return self.classifier.(self.featurizer(x))
+        return self.classifier(self.featurizer(x))

@@ -1,16 +1,14 @@
 '''
 to get dataloader
 '''
-from multiprocessing.pool import IMapIterator
-from random import shuffle
-from tkinter import Image
+
 import numpy as np
 import sklearn.model_selection as ms
 from torch.utils.data import DataLoader
 
-from unicodedata import name
 from datautil.imgdata.imgdataload import ImageDataset
 import datautil.imgdata.util as imgutil
+from datautil.infdataloader import InfiniteDataLoader
 
 def get_img_dataloader(args):
     rate = 0.2
@@ -20,11 +18,11 @@ def get_img_dataloader(args):
     args.domain_num = len(names)
     for i in range(len(names)):
         if i in args.test_envs:
-            tedatalist.append(ImageDataset(args.dataset, args.task, args.data_dir,
+            tedatalist.append(ImageDataset(args.dataset, args.data_dir,
                                             names[i], i, transform=imgutil.img_test(args.dataset), test_envs= args.test_envs))
         else:
-            tmpdatay = ImageDataset(args.dataset, args.task, args.data_dir, 
-                                    name[i], i, transform=imgutil.image_train(args.dataset), test_envs=args.test_envs).lables
+            tmpdatay = ImageDataset(args.dataset, args.data_dir, 
+                                    names[i], i, transform=imgutil.image_train(args.dataset), test_envs=args.test_envs).labels
             l = len(tmpdatay)
             if args.split_style == 'strat':
                 lslist = np.arange(l)
@@ -36,18 +34,16 @@ def get_img_dataloader(args):
             else:
                 raise Exception('the split style is not strat')
 
-            trdatalist.append(ImageDataset(args.dataset, args.task, args.data_dir, 
-                                            name[i], i, transform=imgutil.image_train(args.dataset), indices=indextr, test_envs=args.test_envs))
-            tedatalist.append(ImageDataset(args.dastaset, args.task, args.root_dir, 
-                                            name[i], i, transform=imgutil.img_test(args.dataset), indices=indexte, test_envs=args.test_envs))
+            trdatalist.append(ImageDataset(args.dataset, args.data_dir, 
+                                            names[i], i, transform=imgutil.image_train(args.dataset), indices=indextr, test_envs=args.test_envs))
+            tedatalist.append(ImageDataset(args.dataset, args.data_dir, 
+                                            names[i], i, transform=imgutil.img_test(args.dataset), indices=indexte, test_envs=args.test_envs))
     
-    # modify the 'drop_last' to False, and use the DataLoader instead of the user-defined infinetedataloader
-    train_loader = [DataLoader(
+    train_loader = [InfiniteDataLoader(
         dataset = env, 
+        weights = None, 
         batch_size = args.batch_size, 
-        num_workers = args.N_WORKERS, 
-        drop_last = False, 
-        shuffle = True)
+        num_workers = args.N_WORKERS)
         for env in trdatalist]
 
     eval_loaders = [DataLoader(

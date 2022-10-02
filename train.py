@@ -18,7 +18,7 @@ def get_args():
     parser.add_argument('--net', type= str, default= 'resnet18')
     parser.add_argument('--num_classes', type= int, default=7)
     parser.add_argument('--dis_hidden', type= int, default= 256)
-    parser.add_argument('--test_envs', type=list, default=[0])
+    parser.add_argument('--test_envs', type=int, nargs= '+', default=[0])
     parser.add_argument('--data_file', type=str, default='', help='root_dir')
     parser.add_argument('--dataset', type=str, default= 'PACS')
     parser.add_argument('--data_dir', type=str, default='')
@@ -43,23 +43,25 @@ def get_args():
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
     parser.add_argument('--output', type=str, default='train_output', help='output path')
     parser.add_argument('--temperature', type=int, default=0.07, help='the temperature for the predicted logits')
-    parser.
+    parser.add_argument('--alpha', type=float, default=0.5, help='the discriminator alpha')
     args = parser.parse_args()
     args.data_dir = args.data_file + args.data_dir
+    # os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
     os.makedirs(args.output, exist_ok=True)
     sys.stdout = Tee(os.path.join(args.output, 'out.txt'))
     sys.stderr = Tee(os.path.join(args.output, 'err.txt'))
     args = img_param_init(args)
     return args
 
-if __name__ == 'main':
+if __name__ == '__main__':
     args = get_args()
     set_random_seed(args.seed)
 
     loss_list = alg_loss_dict(args)
     train_loader, eval_loader = get_img_dataloader(args)
     eval_name_dict = train_valid_target_eval_names(args)
-    model = JDM.cuda()
+    print('==========')
+    model = JDM(args).cuda()
     model.train()
     opt = optimizer(model, args)
     sch = scheduler(opt, args)
@@ -78,7 +80,7 @@ if __name__ == 'main':
             minibatches = [(data) for data in next(train_minibatches_iterator)] #TODO: if the minibatches would be None in the last iter_num?
             step_vals = model.update(minibatches, opt, sch)
 
-        for (epoch in [int(args.max_epoch*0.7), int(args.max_epoch*0.9)]) and (not args.schuse): #TODO: change the strategy
+        if (epoch in [int(args.max_epoch*0.7), int(args.max_epoch*0.9)]) and (not args.schuse): #TODO: change the strategy
             print('manually decrease lr')
             for params in opt.param_groups:
                 params['lr'] = params['lr'] * 0.1
@@ -92,7 +94,7 @@ if __name__ == 'main':
             s = ''
             for item in acc_type_list:
                 acc_record[item] = np.mean(np.array(
-                    accu.accuracy(model, eval_loader[i]) for i in eval_name_dict[item]
+                    [accu.accuracy(model, eval_loader[i]) for i in eval_name_dict[item]]
                 ))
                 s += (item + '_acc:%.4f' % acc_record[item])
             print(s[:-1])
