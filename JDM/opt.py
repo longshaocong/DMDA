@@ -13,10 +13,18 @@ def get_params(model, args):
         initlr = args.lr
     params = [
         {'params': model.featurizer.parameters(), 'lr': args.lr_decay1 * initlr}, 
-        {'params': model.classifier.parameters(), 'lr': args.lr_decay2 * initlr}, 
-        {'params': model.discriminator.parameters(), 'lr': args.lr_decay2 * initlr}, 
-        {'params': model.embedding.parameters(), 'lr': args.lr_decay2 * initlr}
+        {'params': model.classifier.parameters(), 'lr': args.lr_decay2 * initlr}
     ]
+    if args.algorithm == 'JDM':
+        params.append(
+            {'params': model.discriminator.parameters(), 'lr': args.lr_decay2 * initlr}, 
+            {'params': model.embedding.parameters(), 'lr': args.lr_decay2 * initlr}
+        )
+    elif args.algorithm == 'CONTRA':
+        params.append(
+            {'params': model.projector.parameters(), 'lr': initlr}, 
+            {'params': model.predictor.parameters(), 'lr': initlr}
+        )
     return params
 
 

@@ -9,6 +9,7 @@ import sys
 from utils.util import set_random_seed, alg_loss_dict, train_valid_target_eval_names, print_args, save_checkpoint, Tee, img_param_init
 from datautil.getdataloader import get_img_dataloader
 from JDM.JDM import JDM
+from JDM.Simsiam import CONTRA
 from JDM.opt import *
 from JDM import accu
 
@@ -44,6 +45,9 @@ def get_args():
     parser.add_argument('--output', type=str, default='train_output', help='output path')
     parser.add_argument('--temperature', type=int, default=0.07, help='the temperature for the predicted logits')
     parser.add_argument('--alpha', type=float, default=0.5, help='the discriminator alpha')
+    parser.add_argument('--contrast', action='store_true', help='if contrastive learning')
+    parser.add_argument('--pro_dim', type=int, default=512, help='projection dim')
+    parser.add_argument('--pre_dim', type=int, default=128, help='hidden dim  of the predictor')
     args = parser.parse_args()
     args.data_dir = args.data_file + args.data_dir
     # os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
@@ -61,7 +65,10 @@ if __name__ == '__main__':
     train_loader, eval_loader = get_img_dataloader(args)
     eval_name_dict = train_valid_target_eval_names(args)
     print('==========')
-    model = JDM(args).cuda()
+    if args.algorithm == 'JDM':
+        model = JDM(args).cuda()
+    elif args.algorithm == 'CONTRA':
+        model = CONTRA(args).cuda()
     model.train()
     opt = optimizer(model, args)
     sch = scheduler(opt, args)
@@ -96,7 +103,7 @@ if __name__ == '__main__':
                 acc_record[item] = np.mean(np.array(
                     [accu.accuracy(model, eval_loader[i]) for i in eval_name_dict[item]]
                 ))
-                s += (item + '_acc:%.4f' % acc_record[item])
+                s += (item + '_acc:%.4f, ' % acc_record[item])
             print(s[:-1])
             if acc_record['valid'] > best_valid_acc:
                 best_valid_acc = acc_record['valid']

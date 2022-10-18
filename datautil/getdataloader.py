@@ -34,10 +34,14 @@ def get_img_dataloader(args):
             else:
                 raise Exception('the split style is not strat')
 
-            trdatalist.append(ImageDataset(args.dataset, args.data_dir, 
-                                            names[i], i, transform=imgutil.image_train(args.dataset), indices=indextr, test_envs=args.test_envs))
+            if args.algorithm == 'JDM':
+                trdatalist.append(ImageDataset(args.dataset, args.data_dir, 
+                                names[i], i, transform=imgutil.image_train(args.dataset), indices=indextr, test_envs=args.test_envs))
+            elif args.algorithm == 'CONTRA':
+                trdatalist.append(ImageDataset(args.dataset, args.data_dir, 
+                                names[i], i, transform=imgutil.contra_image(args.dataset), indices=indextr, test_envs=args.test_envs, CO=args.contrast))
             tedatalist.append(ImageDataset(args.dataset, args.data_dir, 
-                                            names[i], i, transform=imgutil.img_test(args.dataset), indices=indexte, test_envs=args.test_envs))
+                                names[i], i, transform=imgutil.img_test(args.dataset), indices=indexte, test_envs=args.test_envs))
     
     train_loader = [InfiniteDataLoader(
         dataset = env, 

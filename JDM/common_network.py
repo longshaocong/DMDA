@@ -24,3 +24,34 @@ class class_embedding(nn.Module):
 
     def forward(self, x):
         return self.layer(x)
+
+class projector(nn.Module):
+    def __init__(self, prev_dim, feat_dim):
+        super(projector, self).__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(prev_dim, prev_dim, bias=False), 
+            nn.BatchNorm1d(prev_dim), 
+            nn.ReLU(inplace=True), 
+            nn.Linear(prev_dim, prev_dim, bias=False), 
+            nn.BatchNorm1d(prev_dim), 
+            nn.ReLU(inplace=True), 
+            nn.Linear(prev_dim, feat_dim, bias=False), # simsiam中直接使用的resent的fc, 其resnet定义中zero_init_residual=True
+            nn.BatchNorm1d(feat_dim, affine=False)
+        )
+
+    def forward(self, x):
+        return self.fc(x)
+
+
+class predictor(nn.Module):
+    def __init__(self, feat_dim, pred_dim):
+        super(projector, self).__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(feat_dim, pred_dim, bias=False), 
+            nn.BatchNorm1d(pred_dim), 
+            nn.ReLU(inplace=True), 
+            nn.Linear(pred_dim, feat_dim)
+        )
+
+    def forward(self, x):
+        return self.fc(x)

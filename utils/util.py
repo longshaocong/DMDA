@@ -19,7 +19,8 @@ def set_random_seed(seed=3407):
     torch.backends.cudnn.benchmark = False
 
 def alg_loss_dict(args):
-    loss_dict = {'JDM': ['class', 'dis', 'total']
+    loss_dict = {'JDM': ['class', 'dis', 'total'], 
+                 'CONTRA': ['class', 'con', 'total']
                 }
     return loss_dict[args.algorithm]
 
