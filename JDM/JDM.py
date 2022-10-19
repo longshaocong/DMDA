@@ -21,7 +21,7 @@ class JDM(nn.Module):
         self.embedding = class_embedding(args.num_classes, self.featurizer.in_features)
         self.args = args
 
-    def update(self, minibatches, opt, sch):
+    def update(self, minibatches, opt, sch, temperature):
         x = torch.cat([data[0].cuda().float() for data in minibatches])
         y = torch.cat([data[1].cuda().long() for data in minibatches])
         z = self.featurizer(x)
@@ -30,9 +30,9 @@ class JDM(nn.Module):
         classifier_loss = F.cross_entropy(predict_y, y)
 
         # not using sample method
-        # index_pre = F.softmax(predict_y / self.args.temperature, dim=1)
+        index_pre = F.softmax(predict_y / temperature, dim=1)
         # using gumbel to sample from the distribution of the preidct logit
-        index_pre = F.gumbel_softmax(predict_y, tau= self.args.temperature, hard=False)
+        # index_pre = F.gumbel_softmax(predict_y, tau=temperature, hard=False)
         
         disc_input = z + self.embedding(index_pre)
         disc_input = adver_network.ReverseLayer.apply(
@@ -49,8 +49,8 @@ class JDM(nn.Module):
         opt.zero_grad()
         loss.backward()
         opt.step()
-        if sch:
-            sch.step()
+        # if sch:
+        #     sch.step()
         return {'total': loss.item(), 'class': classifier_loss.item(), 'dis': disc_loss.item()}
     
     def predict(self, x):

@@ -1,6 +1,7 @@
 
 
 import argparse
+from ast import parse
 import time
 import numpy as np 
 import os
@@ -42,7 +43,8 @@ def get_args():
     parser.add_argument('--checkpoint_frep', type=int, default=1, help='checkpoint every N epoch')
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
     parser.add_argument('--output', type=str, default='train_output', help='output path')
-    parser.add_argument('--temperature', type=int, default=0.07, help='the temperature for the predicted logits')
+    parser.add_argument('--temperature', type=float, default=0.07, help='the temperature for the predicted logits')
+    parser.add_argument('--vary_T', action='store_ture', help='if the temperature is varying')
     parser.add_argument('--alpha', type=float, default=0.5, help='the discriminator alpha')
 
     parser.add_argument('--contrast', action='store_true', help='if contrastive learning')
@@ -90,12 +92,19 @@ if __name__ == '__main__':
     for epoch in range(args.max_epoch):
         for iter_num in range(args.steps_per_epoch):
             minibatches = [(data) for data in next(train_minibatches_iterator)] #TODO: if the minibatches would be None in the last iter_num?
-            step_vals = model.update(minibatches, opt, sch)
+            step_vals = model.update(minibatches, opt, sch, args.temperature)
 
         if (epoch in [int(args.max_epoch*0.7), int(args.max_epoch*0.9)]) and (not args.schuse): #TODO: change the strategy
             print('manually decrease lr')
             for params in opt.param_groups:
                 params['lr'] = params['lr'] * 0.1
+        
+        if sch:
+            sch.step()
+
+        if args.vary_T and ((epoch + 1) % 20 == 0):
+            print('manually double the temperature :%.4f'%(args.temperature))
+            args.temperature = args.temperature * 2
 
         if (epoch == (args.max_epoch - 1)) or (epoch % args.checkpoint_frep == 0):
             print('=================epoch %d=============='%(epoch))
@@ -113,6 +122,7 @@ if __name__ == '__main__':
             if acc_record['valid'] > best_valid_acc:
                 best_valid_acc = acc_record['valid']
                 target_acc = acc_record['target']
+                best_epoch = epoch
             if args.save_model_every_checkpoint:
                 save_checkpoint(f'model_epoch{epoch}.pkl', model, args)
             print('total cost time: %.4f'%(time.time() - start_time))
@@ -122,9 +132,11 @@ if __name__ == '__main__':
 
     print('valid acc: %.4f' % best_valid_acc)
     print('DG result: %.4f' % target_acc)
+    print('best epoch: %d'% best_epoch)
     
     with open(os.path.join(args.output, 'done.txt'), 'w') as f:
         f.write('done\n')
         f.write('total cost time: %s\n'%(str(time.time() - start_time)))
-        f.write('valid acc: %.4f'% best_valid_acc)
-        f.write('target acc: %.4f'%target_acc)
+        f.write('valid acc: %.4f\n'% best_valid_acc)
+        f.write('target acc: %.4f\n'%target_acc)
+        f.write('best epoch: %d'% best_epoch)

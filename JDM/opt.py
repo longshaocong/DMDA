@@ -42,7 +42,7 @@ def scheduler(optimizer, args):
     # TODO: the T_max in cosineAnneallingLR is problematic, should be smaller
     if args.schusech == 'cos':
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, args.max_epoch * args.steps_per_epoch
+            optimizer, args.max_epoch
         )
     else:
         scheduler = torch.optim.lr_scheduler.LambdaLR(

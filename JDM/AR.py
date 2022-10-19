@@ -20,7 +20,7 @@ class AR(nn.Module):
         # self.criterion = nn.CosineSimilarity(dim=1).cuda()
         self.args = args
 
-    def update(self, minibatches, opt, sch):
+    def update(self, minibatches, opt, sch, temperature):
         x1 = torch.cat([data[0].cuda().float() for data in minibatches])
         x2 = torch.cat([data[3].cuda().float() for data in minibatches])
         y = torch.cat([data[1].cuda().long() for data in minibatches])
@@ -37,8 +37,8 @@ class AR(nn.Module):
         opt.zero_grad()
         loss.backward()
         opt.step()
-        if sch:
-            sch.step()
+        # if sch:
+        #     sch.step()
         return {'total': loss.item(), 'class': classifier_loss.item(), 'AR': AR_loss.item()}
     
     def predict(self, x):
