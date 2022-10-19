@@ -8,16 +8,16 @@ import torch.nn.functional as F
 from JDM.RESNET import get_fea
 from JDM.common_network import feat_classifier, projector, predictor
 
-class CONTRA(nn.Module):
+class AR(nn.Module):
     
     def __init__(self,args):
-        super(CONTRA, self).__init__()
+        super(AR, self).__init__()
 
         self.featurizer = get_fea(args)
         self.classifier = feat_classifier(args.num_classes, self.featurizer.in_features)
-        self.projector = projector(self.featurizer.in_features, args.pro_dim)
-        self.predictor =  predictor(args.pro_dim, args.pre_dim)
-        self.criterion = nn.CosineSimilarity(dim=1).cuda()
+        # self.projector = projector(self.featurizer.in_features, args.pro_dim)
+        # self.predictor =  predictor(args.pro_dim, args.pre_dim)
+        # self.criterion = nn.CosineSimilarity(dim=1).cuda()
         self.args = args
 
     def update(self, minibatches, opt, sch):
@@ -31,24 +31,15 @@ class CONTRA(nn.Module):
         predict_y2 = self.classifier(Re2)
         classifier_loss = (F.cross_entropy(predict_y1, y) + F.cross_entropy(predict_y2, y)) * 0.5
 
-        z1 = self.projector(Re1)
-        z2 = self.projector(Re2)
+        AR_loss = torch.sum(torch.square(torch.sub(predict_y1, predict_y2)))
 
-        p1 = self.predictor(z1)
-        p2 = self.predictor(z2)
-
-        dez1 = z1.detach()
-        dez2 = z2.detach()
-
-        contrastive_loss = -(self.criterion(p1, dez2).mean() + self.criterion(p2, dez1).mean()) * 0.5
-
-        loss = classifier_loss + self.args.CON_lambda * contrastive_loss
+        loss = classifier_loss + self.args.AR_lambda * AR_loss
         opt.zero_grad()
         loss.backward()
         opt.step()
         if sch:
             sch.step()
-        return {'total': loss.item(), 'class': classifier_loss.item(), 'con': contrastive_loss.item()}
+        return {'total': loss.item(), 'class': classifier_loss.item(), 'AR': AR_loss.item()}
     
     def predict(self, x):
         return self.classifier(self.featurizer(x))

@@ -20,7 +20,8 @@ def set_random_seed(seed=3407):
 
 def alg_loss_dict(args):
     loss_dict = {'JDM': ['class', 'dis', 'total'], 
-                 'CONTRA': ['class', 'con', 'total']
+                 'CONTRA': ['class', 'con', 'total'], 
+                 'AR': ['class', 'AR', 'total']
                 }
     return loss_dict[args.algorithm]
 
