@@ -44,13 +44,13 @@ def get_args():
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
     parser.add_argument('--output', type=str, default='train_output', help='output path')
     parser.add_argument('--temperature', type=float, default=0.07, help='the temperature for the predicted logits')
-    parser.add_argument('--vary_T', action='store_ture', help='if the temperature is varying')
+    parser.add_argument('--vary_T', action='store_true', help='if the temperature is varying')
     parser.add_argument('--alpha', type=float, default=0.5, help='the discriminator alpha')
 
     parser.add_argument('--contrast', action='store_true', help='if contrastive learning')
     parser.add_argument('--pro_dim', type=int, default=512, help='projection dim')
     parser.add_argument('--pre_dim', type=int, default=128, help='hidden dim  of the predictor')
-    parser.add_argument('--CON_lambda', type=int, default=0.1, help='the trade off  for contrastive learning')
+    parser.add_argument('--CON_lambda', type=float, default=0.1, help='the trade off  for contrastive learning')
 
     parser.add_argument('--AR_lambda', type=float, default=0.01, help='the trade-off for AR')
     args = parser.parse_args()
