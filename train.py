@@ -91,8 +91,12 @@ if __name__ == '__main__':
     start_time = time.time()
     for epoch in range(args.max_epoch):
         for iter_num in range(args.steps_per_epoch):
+#             s = time.time()
             minibatches = [(data) for data in next(train_minibatches_iterator)] #TODO: if the minibatches would be None in the last iter_num?
+#             mid = time.time()
+#             print('loader time :%.4f'%(mid - s))
             step_vals = model.update(minibatches, opt, sch, args.temperature)
+#             print('train time: %.4f'%(time.time() - mid))
 
         if (epoch in [int(args.max_epoch*0.7), int(args.max_epoch*0.9)]) and (not args.schuse): #TODO: change the strategy
             print('manually decrease lr')
@@ -102,30 +106,30 @@ if __name__ == '__main__':
         if sch:
             sch.step()
 
-        if args.vary_T and ((epoch + 1) % 20 == 0):
+        if args.vary_T and ((epoch + 1) % 30 == 0):
             print('manually double the temperature :%.4f'%(args.temperature))
-            args.temperature = args.temperature * 2
+            args.temperature = args.temperature / 2
 
         if (epoch == (args.max_epoch - 1)) or (epoch % args.checkpoint_frep == 0):
-            print('=================epoch %d=============='%(epoch))
-            s = ''
-            for item in loss_list:
-                s += (item + '_loss:%.4f, '%(step_vals[item]))
-            print(s[:-1])
-            s = ''
+#             print('=================epoch %d=============='%(epoch))
+#             s = ''
+#             for item in loss_list:
+#                 s += (item + '_loss:%.4f, '%(step_vals[item]))
+#             print(s[:-1])
+#             s = ''
             for item in acc_type_list:
                 acc_record[item] = np.mean(np.array(
                     [accu.accuracy(model, eval_loader[i]) for i in eval_name_dict[item]]
                 ))
-                s += (item + '_acc:%.4f, ' % acc_record[item])
-            print(s[:-1])
+#                 s += (item + '_acc:%.4f, ' % acc_record[item])
+#             print(s[:-1])
             if acc_record['valid'] > best_valid_acc:
                 best_valid_acc = acc_record['valid']
                 target_acc = acc_record['target']
                 best_epoch = epoch
             if args.save_model_every_checkpoint:
                 save_checkpoint(f'model_epoch{epoch}.pkl', model, args)
-            print('total cost time: %.4f'%(time.time() - start_time))
+#             print('total cost time: %.4f'%(time.time() - start_time))
             model_dict = model.state_dict()
 
     save_checkpoint('model.pkl', model, args)

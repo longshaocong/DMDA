@@ -4,6 +4,7 @@ This is the script for joint distribution matching in domain generalization
 import torch
 import torch.nn as nn
 import torch.nn.functional as F 
+import time
 
 from JDM.RESNET import get_fea
 from JDM.common_network import feat_classifier, projector, predictor
@@ -21,9 +22,12 @@ class CONTRA(nn.Module):
         self.args = args
 
     def update(self, minibatches, opt, sch, temperature):
+#         start = time.time()
         x1 = torch.cat([data[0].cuda(non_blocking=True).float() for data in minibatches])
         x2 = torch.cat([data[3].cuda(non_blocking=True).float() for data in minibatches])
         y = torch.cat([data[1].cuda(non_blocking=True).long() for data in minibatches])
+#         mid = time.time()
+#         print('pass data: %.4f'%(mid - start))
         Re1 = self.featurizer(x1)
         Re2 = self.featurizer(x2)
 
@@ -46,6 +50,7 @@ class CONTRA(nn.Module):
         opt.zero_grad()
         loss.backward()
         opt.step()
+#         print('train time: %.4f'%(time.time() - mid))
         # if sch:
         #     sch.step()
         return {'total': loss.item(), 'class': classifier_loss.item(), 'con': contrastive_loss.item()}
