@@ -1,11 +1,13 @@
 from JDM.JDM import JDM
 from JDM.Simsiam import CONTRA
 from JDM.AR import AR
+from JDM.JDM_CON import JDM_con
 
 algorithms = {
     'JDM', 
     'CONTRA', 
-    'AR'
+    'AR', 
+    'JDM_con'
 }
 
 def get_algorithm_class(algorithm_name):

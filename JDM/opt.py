@@ -27,6 +27,17 @@ def get_params(model, args):
         params.append(
             {'params': model.predictor.parameters(), 'lr': initlr}
         )
+    elif args.algorithm == 'JDM_con':
+        params.append(
+            {'params': model.discriminator.parameters(), 'lr': args.lr_decay2 * initlr})
+        params.append(
+            {'params': model.embedding.parameters(), 'lr': args.lr_decay2 * initlr}
+        )
+        params.append(
+            {'params': model.projector.parameters(), 'lr': initlr})
+        params.append(
+            {'params': model.predictor.parameters(), 'lr': initlr}
+        )
     return params
 
 
