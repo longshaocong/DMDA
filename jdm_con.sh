@@ -1,4 +1,4 @@
-python train.py --data_dir /openbayes/home/DomainBed/domainbed/data/PACS/ \
+python train.py --data_dir /openbayes/input/input0/PACS/ \
                 --max_epoch 100 \
                 --seed 0 \
                 --weight_decay 0.0001 \
@@ -14,14 +14,16 @@ python train.py --data_dir /openbayes/home/DomainBed/domainbed/data/PACS/ \
                 --lr 0.025 \
                 --contrast \
                 --schuse \
-                --schusech cos 
+                --schusech cos \
+                --N_WORKERS 6\
+                --steps_per_epoch 25
 
-python train.py --data_dir /openbayes/home/DomainBed/domainbed/data/PACS/ \
+python train.py --data_dir /openbayes/input/input0/PACS/ \
                 --max_epoch 100 \
                 --seed 0 \
                 --weight_decay 0.0001 \
                 --net resnet18 \
-                --output ./train_output/05/cartoon \
+                --output ../train_output/05/cartoon \
                 --test_envs 1 \
                 --dataset PACS \
                 --algorithm JDM_con \
@@ -32,9 +34,11 @@ python train.py --data_dir /openbayes/home/DomainBed/domainbed/data/PACS/ \
                 --lr 0.025 \
                 --contrast \
                 --schuse \
-                --schusech cos 
+                --schusech cos \
+                --N_WORKERS 6\
+                --steps_per_epoch 25
 
-python train.py --data_dir /openbayes/home/DomainBed/domainbed/data/PACS/ \
+python train.py --data_dir /openbayes/input/input0/PACS/ \
                 --max_epoch 100 \
                 --seed 0 \
                 --weight_decay 0.0001 \
@@ -50,9 +54,11 @@ python train.py --data_dir /openbayes/home/DomainBed/domainbed/data/PACS/ \
                 --lr 0.025 \
                 --contrast \
                 --schuse \
-                --schusech cos 
+                --schusech cos \
+                --N_WORKERS 6\
+                --steps_per_epoch 25
 
-python train.py --data_dir /openbayes/home/DomainBed/domainbed/data/PACS/ \
+python train.py --data_dir /openbayes/input/input0/PACS/ \
                 --max_epoch 100 \
                 --seed 0 \
                 --weight_decay 0.0001 \
@@ -68,9 +74,11 @@ python train.py --data_dir /openbayes/home/DomainBed/domainbed/data/PACS/ \
                 --lr 0.025 \
                 --contrast \
                 --schuse \
-                --schusech cos 
+                --schusech cos \
+                --N_WORKERS 6\
+                --steps_per_epoch 25
 
-python train.py --data_dir /openbayes/home/DomainBed/domainbed/data/PACS/ \
+python train.py --data_dir /openbayes/input/input0/PACS/ \
                 --max_epoch 100 \
                 --seed 0 \
                 --weight_decay 0.0001 \
@@ -86,9 +94,11 @@ python train.py --data_dir /openbayes/home/DomainBed/domainbed/data/PACS/ \
                 --lr 0.025 \
                 --contrast \
                 --schuse \
-                --schusech cos 
+                --schusech cos \
+                --N_WORKERS 6\
+                --steps_per_epoch 25
 
-python train.py --data_dir /openbayes/home/DomainBed/domainbed/data/PACS/ \
+python train.py --data_dir /openbayes/input/input0/PACS/ \
                 --max_epoch 100 \
                 --seed 0 \
                 --weight_decay 0.0001 \
@@ -104,9 +114,11 @@ python train.py --data_dir /openbayes/home/DomainBed/domainbed/data/PACS/ \
                 --lr 0.025 \
                 --contrast \
                 --schuse \
-                --schusech cos 
+                --schusech cos \
+                --N_WORKERS 6\
+                --steps_per_epoch 25
 
-python train.py --data_dir /openbayes/home/DomainBed/domainbed/data/PACS/ \
+python train.py --data_dir /openbayes/input/input0/PACS/ \
                 --max_epoch 100 \
                 --seed 0 \
                 --weight_decay 0.0001 \
@@ -122,9 +134,11 @@ python train.py --data_dir /openbayes/home/DomainBed/domainbed/data/PACS/ \
                 --lr 0.025 \
                 --contrast \
                 --schuse \
-                --schusech cos 
+                --schusech cos \
+                --N_WORKERS 6\
+                --steps_per_epoch 25
 
-python train.py --data_dir /openbayes/home/DomainBed/domainbed/data/PACS/ \
+python train.py --data_dir /openbayes/input/input0/PACS/ \
                 --max_epoch 100 \
                 --seed 0 \
                 --weight_decay 0.0001 \
@@ -140,4 +154,6 @@ python train.py --data_dir /openbayes/home/DomainBed/domainbed/data/PACS/ \
                 --lr 0.025 \
                 --contrast \
                 --schuse \
-                --schusech cos 
+                --schusech cos \
+                --N_WORKERS 6\
+                --steps_per_epoch 25

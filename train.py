@@ -6,6 +6,7 @@ import time
 import numpy as np 
 import os
 import sys
+import torch.nn as nn
 
 from utils.util import set_random_seed, alg_loss_dict, train_valid_target_eval_names, print_args, save_checkpoint, Tee, img_param_init
 from datautil.getdataloader import get_img_dataloader
@@ -71,7 +72,21 @@ if __name__ == '__main__':
     eval_name_dict = train_valid_target_eval_names(args)
     print('==========')
     algorithm = alg.get_algorithm_class(args.algorithm)
-    model = algorithm(args).cuda()
+
+    if torch.cuda.is_available():
+        model = algorithm(args).cuda()
+    
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPUs!")
+        # 就这一行
+#         model = nn.DataParallel(model)
+        model.featurizer = nn.DataParallel(model.featurizer)
+        model.classifier = nn.DataParallel(model.classifier)
+        model.discriminator = nn.DataParallel(model.discriminator)
+        model.embedding = nn.DataParallel(model.embedding)
+        model.projector = nn.DataParallel(model.projector)
+        model.predictor = nn.DataParallel(model.predictor)
+        
     model.train()
     opt = optimizer(model, args)
     sch = scheduler(opt, args)

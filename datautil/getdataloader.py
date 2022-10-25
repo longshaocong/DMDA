@@ -37,7 +37,7 @@ def get_img_dataloader(args):
             if args.algorithm == 'JDM':
                 trdatalist.append(ImageDataset(args.dataset, args.data_dir, 
                                 names[i], i, transform=imgutil.image_train(args.dataset), indices=indextr, test_envs=args.test_envs))
-            elif args.algorithm == 'CONTRA':
+            elif args.algorithm == 'CONTRA' or args.algorithm == 'JDM_con':
                 trdatalist.append(ImageDataset(args.dataset, args.data_dir, 
                                 names[i], i, transform=imgutil.contra_image(args.dataset), indices=indextr, test_envs=args.test_envs, CO=args.contrast))
             tedatalist.append(ImageDataset(args.dataset, args.data_dir, 
