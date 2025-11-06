@@ -1,7 +1,4 @@
-
-
 import argparse
-from ast import parse
 import time
 import numpy as np 
 import os
@@ -10,9 +7,9 @@ import torch.nn as nn
 
 from utils.util import set_random_seed, alg_loss_dict, train_valid_target_eval_names, print_args, save_checkpoint, Tee, img_param_init
 from datautil.getdataloader import get_img_dataloader
-from JDM import alg
-from JDM.opt import *
-from JDM import accu
+from DMDA import alg
+from DMDA.opt import *
+from DMDA import accu
 
 
 def get_args():
@@ -26,9 +23,9 @@ def get_args():
     parser.add_argument('--data_dir', type=str, default='')
     parser.add_argument('--split_style', type=str, default='strat')
     parser.add_argument('--batch_size', type=int, default=32)
-    parser.add_argument('--N_WORKERS', type=int, default=4)
+    parser.add_argument('--N_WORKERS', type=int, default=8)
     parser.add_argument('--seed', type= int, default=3407)
-    parser.add_argument('--algorithm', type=str, default='JDM')
+    parser.add_argument('--algorithm', type=str, default='DMDA')
     parser.add_argument('--domain_num', type=int, default=4)
     parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
     parser.add_argument('--lr_decay', type=float, default=0.75, help='for SGD')
@@ -40,23 +37,17 @@ def get_args():
     parser.add_argument('--momentum', type=float, default=0.9, help='for optimizer')
     parser.add_argument('--max_epoch', type=int, default=100, help='for iterations')
     parser.add_argument('--steps_per_epoch', type=int, default=100, help='for the numbers of minbatch in each epoch')
-    parser.add_argument('--lr_gamma', type=float, default=3e-4, help= 'for optimizer')
+    parser.add_argument('--lr_gamma', type=float, default=1e-3, help= 'for optimizer')
     parser.add_argument('--checkpoint_frep', type=int, default=1, help='checkpoint every N epoch')
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
     parser.add_argument('--output', type=str, default='train_output', help='output path')
     parser.add_argument('--temperature', type=float, default=0.07, help='the temperature for the predicted logits')
     parser.add_argument('--vary_T', action='store_true', help='if the temperature is varying')
-    parser.add_argument('--alpha', type=float, default=0.5, help='the discriminator alpha')
-
-    parser.add_argument('--contrast', action='store_true', help='if contrastive learning')
-    parser.add_argument('--pro_dim', type=int, default=512, help='projection dim')
-    parser.add_argument('--pre_dim', type=int, default=128, help='hidden dim  of the predictor')
-    parser.add_argument('--CON_lambda', type=float, default=0.1, help='the trade off  for contrastive learning')
-
-    parser.add_argument('--AR_lambda', type=float, default=0.01, help='the trade-off for AR')
+    parser.add_argument('--beta', type=float, default=5, help='the extra beta')
+    parser.add_argument('--ratio', type=float, default=0.5, help="the ratio for feature")
     args = parser.parse_args()
     args.data_dir = args.data_file + args.data_dir
-    # os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     os.makedirs(args.output, exist_ok=True)
     sys.stdout = Tee(os.path.join(args.output, 'out.txt'))
     sys.stderr = Tee(os.path.join(args.output, 'err.txt'))
@@ -75,49 +66,32 @@ if __name__ == '__main__':
 
     if torch.cuda.is_available():
         model = algorithm(args).cuda()
-    
-    if torch.cuda.device_count() > 1:
-        print("Let's use", torch.cuda.device_count(), "GPUs!")
-        # 就这一行
-#         model = nn.DataParallel(model)
-        model.featurizer = nn.DataParallel(model.featurizer)
-        model.classifier = nn.DataParallel(model.classifier)
-        model.discriminator = nn.DataParallel(model.discriminator)
-        model.embedding = nn.DataParallel(model.embedding)
-        model.projector = nn.DataParallel(model.projector)
-        model.predictor = nn.DataParallel(model.predictor)
         
     model.train()
-    opt = optimizer(model, args)
-    sch = scheduler(opt, args)
+    optimizer = optimizer(model, args)
+    lr_scheduler = scheduler(optimizer, args)
 
     s = print_args(args, [])
     print('=================heper-parameter used========')
     print(s)
     acc_record = {}
     acc_type_list = ['train', 'valid', 'target']
-    train_minibatches_iterator = zip(*train_loader) # zip(*) get a source_domian_num*batch size for a minibatch, constituted by a batch from each source domain
+    train_minibatches_iterator = zip(*train_loader) 
     best_valid_acc, target_acc = 0, 0
     print('====================start training==============')
     start_time = time.time()
     for epoch in range(args.max_epoch):
         for iter_num in range(args.steps_per_epoch):
-#             s = time.time()
-            minibatches = [(data) for data in next(train_minibatches_iterator)] #TODO: if the minibatches would be None in the last iter_num?
-#             mid = time.time()
-#             print('loader time :%.4f'%(mid - s))
-            step_vals = model.update(minibatches, opt, sch, args.temperature)
-#             print('train time: %.4f'%(time.time() - mid))
+            minibatches = [(data) for data in next(train_minibatches_iterator)] 
+            step_vals = model.update(minibatches, optimizer,lr_scheduler, args.temperature)
 
-        if (epoch in [int(args.max_epoch*0.7), int(args.max_epoch*0.9)]) and (not args.schuse): #TODO: change the strategy
+        if (epoch in [int(args.max_epoch*0.7), int(args.max_epoch*0.9)]) and (not args.schuse): 
             print('manually decrease lr')
-            for params in opt.param_groups:
+            for params in optimizer.param_groups:
                 params['lr'] = params['lr'] * 0.1
         
-        if sch:
-            sch.step()
 
-        if args.vary_T and ((epoch + 1) % 30 == 0):
+        if args.vary_T and ((epoch + 1) % 20 == 0):
             print('manually double the temperature :%.4f'%(args.temperature))
             args.temperature = args.temperature / 2
 
@@ -142,8 +116,6 @@ if __name__ == '__main__':
                 save_checkpoint(f'model_epoch{epoch}.pkl', model, args)
             print('total cost time: %.4f'%(time.time() - start_time))
             model_dict = model.state_dict()
-
-    save_checkpoint('model.pkl', model, args)
 
     print('valid acc: %.4f' % best_valid_acc)
     print('DG result: %.4f' % target_acc)

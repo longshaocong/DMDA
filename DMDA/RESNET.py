@@ -5,6 +5,8 @@ the script to implement the bottle network, e.g., resnet
 import torch 
 import torch.nn as nn
 from torchvision import models
+import torch.nn.functional as F
+import torchvision.models
 
 res_dict = {'resnet18': models.resnet18, 'resnet50': models.resnet50}
 
@@ -32,10 +34,10 @@ class RES(nn.Module):
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
-        x = self.layer4(x)
-        x = self.avgpool(x)
+        map = self.layer4(x)
+        x = self.avgpool(map)
         x = x.view(x.size(0), -1)
-        return x
+        return x, map
 
 def get_fea(args):
     net = RES(args.net)

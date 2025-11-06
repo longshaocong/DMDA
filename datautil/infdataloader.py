@@ -1,6 +1,3 @@
-'''
-have no idea why this work
-'''
 import torch 
 
 class InfiniteSampler(torch.utils.data.Sampler):
@@ -34,8 +31,7 @@ class InfiniteDataLoader:
         self.infinite_iterator = iter(torch.utils.data.DataLoader(
             dataset, 
             num_workers= num_workers, 
-            batch_sampler=InfiniteSampler(batch_sampler),
-            pin_memory=True
+            batch_sampler=InfiniteSampler(batch_sampler)
         ))
 
     def __iter__(self):
@@ -46,8 +42,6 @@ class InfiniteDataLoader:
         raise ValueError
         
 class FastDataLoader:
-    """DataLoader wrapper with slightly improved speed by not respawning worker
-    processes at every epoch."""
     def __init__(self, dataset, batch_size, num_workers):
         super().__init__()
 
@@ -60,8 +54,7 @@ class FastDataLoader:
         self._infinite_iterator = iter(torch.utils.data.DataLoader(
             dataset,
             num_workers=num_workers,
-            batch_sampler=InfiniteSampler(batch_sampler), 
-            pin_memory=True
+            batch_sampler=InfiniteSampler(batch_sampler)
         ))
 
         self._length = len(batch_sampler)

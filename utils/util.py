@@ -4,10 +4,7 @@ import random
 import numpy as np 
 import torch
 
-# seed setting with seed 3407
 def set_random_seed(seed=3407):
-    # os.environ['PYTHONHASHSEED'] = str[seed]
-
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
@@ -19,19 +16,14 @@ def set_random_seed(seed=3407):
     torch.backends.cudnn.benchmark = False
 
 def alg_loss_dict(args):
-    loss_dict = {'JDM': ['class', 'dis', 'total'], 
-                 'CONTRA': ['class', 'con', 'total'], 
-                 'AR': ['class', 'AR', 'total'], 
-                 'JDM_con': ['class', 'dis', 'con', 'total']
+    loss_dict = {
+                 'DMDA': ['class', 'distri', 'exp', 'extra', 'total']
                 }
     return loss_dict[args.algorithm]
 
 def train_valid_target_eval_names(args):
     eval_name_dict = {'train': [], 'valid': [], 'target': []}
     t = 0    
-    '''t represent the index of the dataloader in eval_loader, e.g., eval_loader = [0, 1, 2, 0, 1, 2, 3], 
-    where 0-4 is the proxy of the domian, the 4-th domain is the target domain. the first three 0 1 2 is the source domain, 
-    while the latter 0 1 2 is the valid-set, and the last 3 is the target domain'''
     for i in range(args.domain_num):
         if i not in args.test_envs:
             eval_name_dict['train'].append(t)
@@ -80,13 +72,28 @@ def img_param_init(args):
     dataset = args.dataset
     if dataset == 'PACS':
         domains = ['art_painting', 'cartoon', 'photo', 'sketch']
+    elif dataset == 'office_home':
+        domains = ['Art', 'Clipart', 'Product', 'Real_World']
+    elif dataset == 'terra_incognita':
+        domains = ['location_100', 'location_38', 'location_43', 'location_46']
+    elif dataset == 'VLCS':
+        domains = ['Caltech101', 'LabelMe', 'SUN09', 'VOC2007']
     else:
         print('No such dataset exists!')
     args.domains = domains
     args.img_dataset = {
-        'PACS': ['art_painting', 'cartoon', 'photo', 'sketch']
+        'PACS': ['art_painting', 'cartoon', 'photo', 'sketch'], 
+        'VLCS': ['Caltech101', 'LabelMe', 'SUN09', 'VOC2007'],
+        'office_home': ['Art', 'Clipart', 'Product', 'Real_World'], 
+        'terra_incognita': ['location_100', 'location_38', 'location_43', 'location_46']
     }
-    args.input_shape = (3, 224, 224)
+    args.input_shape = (3, 32, 32)
     if args.dataset == 'PACS':
         args.num_classes = 7
+    elif args.dataset == 'office_home':
+        args.num_classes = 65
+    elif args.dataset == 'VLCS':
+        args.num_classes = 5
+    elif args.dataset == 'terra_incognita':
+        args.num_classes = 10
     return args
